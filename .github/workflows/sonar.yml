@@ -47,7 +47,6 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
         tags: main-${{ github.sha }}
-      
     - name: Set output image tag
       id: set_output
       run: echo "image_tag=main-${{ github.sha }}" >> $GITHUB_ENV

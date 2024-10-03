@@ -39,7 +39,7 @@ jobs:
     #       -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
     - name: Build Docker Image
-      # id: docker_build
+      id: docker_build
       uses: mr-smithers-excellent/docker-build-push@v6
       with:
         image: onyeechris/pythonsonar

@@ -1,0 +1,83 @@
+name: SonarQube
+
+on:
+  push:
+    branches: [ "main" ] 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    outputs:
+      image_tag: ${{ steps.set_output.outputs.image_tag }}
+
+    steps:
+    - name: Checkout process
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    # - name: Run SonarQube Scanner
+    #   env:
+    #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    #   run: |
+    #     curl -sSLo sonar-scanner-cli.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip
+    #     unzip sonar-scanner-cli.zip -d $HOME
+    #     export PATH="$HOME/sonar-scanner-4.6.2.2472-linux/bin:$PATH"
+    #     sonar-scanner \
+    #       -Dsonar.projectKey=SonarProject \
+    #       -Dsonar.sources=. \
+    #       -Dsonar.host.url=http://44.204.46.209:9000 \
+    #       -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+
+    - name: Build Docker Image
+      id: docker_build
+      uses: mr-smithers-excellent/docker-build-push@v6
+      with:
+        image: onyeechris/pythonsonar
+        registry: docker.io
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        tags: main-${{ github.sha }}
+      
+    - name: Set output image tag
+      id: set_output
+      run: echo "image_tag=main-${{ github.sha }}" >> $GITHUB_ENV
+
+
+  # deploy:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
+
+      # Uncomment and update for AWS login
+      # - name: Login to AWS
+      #   uses: aws-actions/configure-aws-credentials@v1
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: us-east-1
+
+      - name: Set IMAGE_TAG environment variable
+        run: echo "IMAGE_TAG=main-${{ github.sha }}" >> $GITHUB_ENV
+
+      # Uncomment to replace image tag in deployment file
+      # - name: Replace image tag in deployment file
+      #   run: sed -i 's|onyeechris/time-api:latest|onyeechris/time-api:${{ env.IMAGE_TAG }}|' time-api.yaml
+      
+      # Uncomment to deploy apps
+      # - name: Deploy apps
+      #   run: |
+      #     kubectl apply -f time-api.yaml
+      #     kubectl apply -f loadb.yaml
